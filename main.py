@@ -1,19 +1,18 @@
+# Availability checker
 
+# External classes
 import requests
-from bs4 import BeautifulSoup
-import regex
-import re
-import json
 import time
 from urllib.parse import urlparse
+
+# My classes
+from switcher import domainProcessor as dp
 from colours import  bcolors
 
 availableToday = {}
+headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+Processor = dp()
 
-def komputronik(txt):
-    matches = re.finditer(r"dataLayer.push\((.*?)\)\;", txt, re.MULTILINE | re.DOTALL)
-    for matchNum, match in enumerate(matches, start=1):
-        return match.group(1)
 def printToConsole(store, prodName, avail, price, prodCode):
     out = "OUT OF STOCK"
     ava = "IN STOCK"
@@ -27,28 +26,26 @@ def main():
     while True:
         f = open("C:\\Users\\Luigiana\\Documents\\3070.txt", "r")
         for x in f:
-            domain = urlparse(x).netloc
-            html = requests.get(x)
-            found = komputronik(html.text)
-            j = json.loads(found)
-            available = j["ecommerce"]["detail"]["products"][0].get('availability')
-            prodName = j["ecommerce"]["detail"]["products"][0].get('name')
-            vendCode = j["ecommerce"]["detail"]["products"][0].get('vendorCode')
-            price = j["ecommerce"]["detail"]["products"][0].get('price')
+            if x == '\n':
+                continue
 
-            if available == 'available':
-                printToConsole(domain, prodName, 1, price, vendCode)
-                if vendCode in availableToday:
-                    current = availableToday[vendCode] + 1
-                    updateObj = {vendCode: current}
+            domain = urlparse(x).netloc
+            html = requests.get(x, headers=headers)
+            Processor.processAccordingly(domain, html.text)
+
+            if Processor.available == 'available':
+                printToConsole(domain, Processor.prodName, 1, Processor.price, Processor.vendCode)
+                if Processor.vendCode in availableToday:
+                    current = availableToday[Processor.vendCode] + 1
+                    updateObj = {Processor.vendCode: current}
                     availableToday.update(updateObj)
                 else:
-                    updateObj = {vendCode: 1}
+                    updateObj = {Processor.vendCode: 1}
                     availableToday.update(updateObj)
             else:
-                printToConsole(domain, prodName, 0, None, None)
+                printToConsole(domain, Processor.prodName, 0, None, None)
 
-            time.sleep(10)
+            time.sleep(5)
 
         print(availableToday)
 
