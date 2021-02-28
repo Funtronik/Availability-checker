@@ -1,9 +1,9 @@
 # Availability checker
 
 # External classes
-import requests
-import time
+
 from urllib.parse import urlparse
+import requests, time
 
 # My classes
 from switcher import domainProcessor as dp
@@ -45,7 +45,7 @@ def main():
             else:
                 printToConsole(domain, Processor.prodName, 0, None, None)
 
-            time.sleep(5)
+            time.sleep(0.5)
 
         print(availableToday)
 
